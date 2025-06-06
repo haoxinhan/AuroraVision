@@ -4,46 +4,9 @@ from EventCatcher.event import Event, EventType, EventSource, EventPriority
 import time
 from EventCatcher import EventCatcher,EventAssembler
 import context
-
-
-#优先级队列
-class PriorityQueue():
-    """
-    优先级队列
-    """
-    def __init__(self):
-        self.queue:List[Event] = []
-        self.index = 0
-        self.max_index = 0
-        self.size = 0
-    def push(self, event: Event):
-        """
-        添加事件
-        :param event: 事件
-        :return:
-        """
-        self.queue.append(event)
-        self.size += 1
-        self.index += 1
-        self.max_index = max(self.max_index, self.index)
-    def pop(self):
-        """
-        弹出事件
-        :return:
-        """
-        #先按照优先级的从小到大排序
-        self.queue.sort(key=lambda x: x.priority.value)
-        #再按照时间戳的从小到大排序
-        self.queue.sort(key=lambda x: x.timestamp)
-        if self.size == 0:
-            return None
-        self.size -= 1
-        self.index -= 1
-        return self.queue.pop(0)
-    def isEmpty(self):
-        return self.size == 0
-
-
+from Config import config
+from PQ import PriorityQueue
+from Output import outputer
 
 
 
@@ -52,7 +15,7 @@ class EventProcessor():
     """
     事件处理器
     """
-    def __init__(self,):
+    def __init__(self):
         #事件队列
         self.event_queue = PriorityQueue()
         #事件处理函数
@@ -63,19 +26,41 @@ class EventProcessor():
         self.running = True
         #上下文
         self.context= context.Context()
-
         #事件组装器
         self.ea = EventAssembler.EventAssembler(self)
         #事件捕捉器
         self.ec = EventCatcher.EventCatcher(self.ea)
-        ##启动事件捕捉器
-        self.ec.start()
+
+
+
+        #加载配置
+        self.config = config.Config()
+        self.config.loadConfig()
+        self.context.setConfig(self.config)
+
+        self.out = outputer.Outputer(self)
+
+
+
+
+
+
+
+    def getContext (self):
+        return self.context
+
 
     def run(self):
         """
         运行事件处理器
         :return:
         """
+        # 启动事件捕捉器
+        self.ec.start()
+        self.out.run()
+
+
+
         #是否过滤
         isRun=True
         #是否运行
@@ -119,6 +104,11 @@ class EventProcessor():
             self.event_handlers[event_type] = []
         # 将处理器添加到事件类型的列表中
         self.event_handlers[event_type].append(handler)
+    def stop(self):
+        # 停止事件处理器
+        self.running = False
+        self.ec.stop()
+        self.out.speaker.stop()
 
 
 ep= EventProcessor()

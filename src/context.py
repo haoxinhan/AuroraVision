@@ -1,7 +1,9 @@
 import time
-
+from Config import config
 
 class Context(object):
+    last_focus_change_time:float
+    Config:config.Config
     def __init__(self, **kwargs):
         #焦点最后改变时间
         self.last_focus_change_time = time.time()
@@ -9,3 +11,5 @@ class Context(object):
         self.last_focus_change_time = time
     def get_last_focus_change_time(self):
         return self.last_focus_change_time
+    def setConfig(self, config:config.Config):
+        self.Config = config

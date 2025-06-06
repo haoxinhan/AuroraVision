@@ -107,7 +107,7 @@ class EventCatcher(object):
 
             # 消息循环
             msg = wintypes.MSG()
-            while user32.GetMessageW(ctypes.byref(msg), 0, 0, 0):
+            while self.running and user32.GetMessageW(ctypes.byref(msg), 0, 0, 0):
                 user32.TranslateMessage(ctypes.byref(msg))
                 user32.DispatchMessageW(ctypes.byref(msg))
 
@@ -118,6 +118,8 @@ class EventCatcher(object):
         finally:
             pass
 
+    def stop(self):
+        self.running = False
 
 
 
